@@ -104,9 +104,10 @@ h1,h2,h3,.disp{font-family:'Space Grotesk',sans-serif;}
 
 /* MAP */
 #map{position:absolute;inset:0;top:0;bottom:64px;}
-.maplegend{position:absolute;top:14px;left:14px;right:14px;background:var(--card);border-radius:12px;padding:10px 12px;box-shadow:var(--shadow);display:flex;flex-wrap:wrap;gap:6px 12px;z-index:400;font-size:11px;}
+.maplegend{position:absolute;bottom:78px;left:14px;right:14px;background:var(--card);border-radius:12px;padding:10px 12px;box-shadow:var(--shadow);display:flex;flex-wrap:wrap;gap:8px 14px;z-index:400;font-size:11px;align-items:center;}
+.legicon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;margin-right:5px;flex-shrink:0;}
 .legdot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;}
-.locbtn{position:absolute;bottom:80px;right:14px;z-index:400;background:var(--ink);color:#fff;border:none;width:46px;height:46px;border-radius:50%;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.locbtn{position:absolute;top:14px;right:14px;z-index:400;background:var(--ink);color:#fff;border:none;width:46px;height:46px;border-radius:50%;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;cursor:pointer;}
 .maptab{position:relative;flex:1;}
 
 /* NAV */
@@ -147,12 +148,12 @@ h1,h2,h3,.disp{font-family:'Space Grotesk',sans-serif;}
 
   <div id="tab-map" class="tabpage">
     <div class="maptab">
-      <div class="maplegend">
-        <span><span class="legdot" style="background:#C41E1A"></span>Tiendas</span>
-        <span><span class="legdot" style="background:#1B32A8"></span>Comida</span>
-        <span><span class="legdot" style="background:#0E6B34"></span>Supers</span>
-        <span><span class="legdot" style="background:#C9960A"></span>Lugares</span>
-        <span><span class="legdot" style="background:#D4AF17"></span>Destacado</span>
+      <div class="maplegend" id="maplegend">
+        <span><span class="legicon" style="background:#C41E1A"></span>Tiendas</span>
+        <span><span class="legicon" style="background:#1B32A8"></span>Comida</span>
+        <span><span class="legicon" style="background:#0E6B34"></span>Supers</span>
+        <span><span class="legicon" style="background:#C9960A"></span>Lugares</span>
+        <span><span class="legicon" style="background:#D4AF17"></span>Destacado</span>
       </div>
       <div id="map"></div>
       <button class="locbtn" id="locbtn" title="Mi ubicación">
@@ -354,12 +355,19 @@ function buildPopup(p, extraLine){
   return `<b>${p.name}</b>${line}${priceLine}${horarioLine}${starLine}${recLine}${linkLine}`;
 }
 
+function fillLegendIcons(){
+  const icons = document.querySelectorAll('#maplegend .legicon');
+  const svgs = [bagSvg(), forkSvg(), cartSvg(), flagSvg(), starSvg()];
+  icons.forEach((el,i)=>{ el.innerHTML = svgs[i]; });
+}
+
 function initMap(){
   if(map) return;
   map = L.map('map', {zoomControl:true}).setView([51.5137, -0.1357], 14);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
     attribution:'© OpenStreetMap contributors © CARTO', maxZoom:19, subdomains:'abcd'
   }).addTo(map);
+  fillLegendIcons();
 
   const shopIcon = pinIcon('#C41E1A', bagSvg());
   const foodIcon = pinIcon('#1B32A8', forkSvg());
