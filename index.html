@@ -904,12 +904,13 @@ function openPhotoDB(){
   });
 }
 async function savePhotoBlob(key, blob){
+  const dataUrl = await blobToDataURL(blob);
   const db = await openPhotoDB();
   try{
     return await new Promise((resolve, reject)=>{
       try{
         const tx = db.transaction('photos','readwrite');
-        tx.objectStore('photos').put(blob, key);
+        tx.objectStore('photos').put(dataUrl, key);
         tx.oncomplete = ()=> resolve();
         tx.onerror = (e)=> reject(e.target.error || new Error('Error desconocido al guardar'));
         tx.onabort = (e)=> reject(e.target.error || new Error('Se canceló el guardado'));
@@ -927,7 +928,7 @@ async function savePhotoBlob(key, blob){
       const db2 = await openPhotoDB();
       return new Promise((resolve, reject)=>{
         const tx = db2.transaction('photos','readwrite');
-        tx.objectStore('photos').put(blob, key);
+        tx.objectStore('photos').put(dataUrl, key);
         tx.oncomplete = ()=> resolve();
         tx.onerror = (e)=> reject(e.target.error || new Error('Error persistente al guardar'));
       });
@@ -940,7 +941,7 @@ async function getPhotoBlob(key){
   return new Promise((resolve)=>{
     const tx = db.transaction('photos','readonly');
     const req = tx.objectStore('photos').get(key);
-    req.onsuccess = ()=> resolve(req.result || null);
+    req.onsuccess = ()=> resolve(req.result || null); // ahora es un data URL (string), no un Blob
     req.onerror = ()=> resolve(null);
   });
 }
@@ -1116,12 +1117,11 @@ function openCameraFor(photoKey, btnEl){
 }
 
 async function loadThumb(photoKey, stopEl){
-  const blob = await getPhotoBlob(photoKey);
+  const dataUrl = await getPhotoBlob(photoKey);
   const btn = stopEl.querySelector('.photobtn');
   const thumb = stopEl.querySelector('.phothumb');
-  if(blob){
-    const url = await blobToDataURL(blob);
-    thumb.src = url;
+  if(dataUrl){
+    thumb.src = dataUrl;
     thumb.style.display = 'block';
     btn.classList.add('taken');
     btn.querySelector('.photobtn-label').textContent = 'Repetir';
@@ -1286,10 +1286,9 @@ async function generateAlbum(){
     for(const day of DAYS){
       for(let idx=0; idx<day.activities.length; idx++){
         const key = day.id+':'+idx;
-        const blob = await getPhotoBlob(key);
-        if(!blob) continue;
+        const dataUrl = await getPhotoBlob(key);
+        if(!dataUrl) continue;
         anyPhoto = true;
-        const dataUrl = await blobToDataURL(blob);
         const act = day.activities[idx];
 
         if(!firstPage) doc.addPage();
