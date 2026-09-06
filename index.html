@@ -1225,8 +1225,8 @@ function fillLegendIcons(){
 function initMap(){
   if(map) return;
   map = L.map('map', {zoomControl:true}).setView([51.5137, -0.1357], 14);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    attribution:'© OpenStreetMap contributors © CARTO', maxZoom:19, subdomains:'abcd'
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution:'© OpenStreetMap contributors', maxZoom:19
   }).addTo(map);
   fillLegendIcons();
 

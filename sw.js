@@ -1,22 +1,22 @@
-const CACHE_NAME = 'londres2026-v1';
-const APP_SHELL_URL = self.registration.scope; // la propia página index.html
+const CACHE_NAME = 'londres2026-v3';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.add(APP_SHELL_URL))
-  );
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys().then((names) =>
+      Promise.all(names.filter((n) => n !== CACHE_NAME).map((n) => caches.delete(n)))
+    ).then(() => self.clients.claim())
+  );
 });
 
 self.addEventListener('fetch', (event) => {
   const url = event.request.url;
 
-  // Cache-first para las teselas del mapa (CartoDB): una vez vistas, quedan guardadas
-  if (url.includes('basemaps.cartocdn.com')) {
+  // Los mapas (teselas) sí se guardan en caché: una vez vistos, quedan disponibles offline
+  if (url.includes('tile.openstreetmap.org')) {
     event.respondWith(
       caches.open(CACHE_NAME).then((cache) =>
         cache.match(event.request).then((cached) => {
@@ -31,16 +31,13 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first para la propia app y fuentes
+  // La propia app (HTML/JS) siempre intenta red primero, para no quedarse nunca
+  // atascada en una versión vieja. Solo usa la copia guardada si no hay conexión.
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      return cached || fetch(event.request).then((response) => {
-        if (event.request.method === 'GET' && response.status === 200) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-        }
-        return response;
-      }).catch(() => cached);
-    })
+    fetch(event.request).then((response) => {
+      const clone = response.clone();
+      caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+      return response;
+    }).catch(() => caches.match(event.request))
   );
 });
